@@ -17,7 +17,7 @@ public class Miniature {
     private Map<String, Handler> handlers = new HashMap<String, Handler>();
 
     public static interface Handler {
-        void handle(Request request, Response response) throws Throwable;
+        void handle(Request request, Response response);
     }
 
     public static abstract class Middleware implements Iterator<Middleware> {
@@ -185,11 +185,7 @@ public class Miniature {
                         System.out.println("executing");
                         MiniatureRequest request = new MiniatureRequest(exchange);
                         MiniatureResponse response = new MiniatureResponse(exchange);
-                        try {
-                            requestMapping.getValue().handle(request, response);
-                        } catch (Throwable throwable) {
-                            throwable.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                        }
+                        requestMapping.getValue().handle(request, response);
                     }
                 });
             }
