@@ -38,7 +38,7 @@ public class Simple {
 
         mini.get("/", new Handler() {
             @Override
-            public void handle(Request request, Response response) throws Throwable {
+            public void handle(Request request, Response response) {
                 String body = "Hello, World\n";
 
                 response.header("Content-Type", "text/plain");
@@ -52,7 +52,7 @@ public class Simple {
 
         mini.get("/test", new Handler() {
             @Override
-            public void handle(Request request, Response response) throws Throwable {
+            public void handle(Request request, Response response) {
                 String body = "Hello, Test\n";
 
                 response.header("Content-Type", "text/plain");
