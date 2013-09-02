@@ -1,8 +1,9 @@
 package me.noroutine;
 
-import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import com.sun.net.httpserver.*;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -13,9 +14,7 @@ public class Miniature {
 
     private List<Middleware> middlewares = new LinkedList<Middleware>();
 
-    private ServerSocket serverSocket;
-
-    private Handler handler;
+    private Map<String, Handler> handlers = new HashMap<String, Handler>();
 
     public static interface Handler {
         void handle(Request request, Response response) throws Throwable;
@@ -40,131 +39,171 @@ public class Miniature {
     }
 
     public static interface Request {
-
-        Request header(String header, String value);
-        Request header(String header, int value);
-
         InputStream stream();
 
         String method();
         String url();
     }
 
+    public static interface Response {
+        Response status(int statusCode);
+        Response length(long length);
+        Response headers(Map<? extends String, ? extends List<String>> headers);
+        Response header(String header, String value);
+        Response header(String header, int value);
+        Response send(CharSequence body);
+    }
+
+
     private static class MiniatureRequest implements Request {
-        private InputStream inputStream;
+        private HttpExchange exchange;
 
-        private MiniatureRequest(Socket socket) throws IOException {
-            inputStream = socket.getInputStream();
-        }
-
-        @Override
-        public Request header(String header, String value) {
-            return null;
-        }
-
-        @Override
-        public Request header(String header, int value) {
-            return null;
+        private MiniatureRequest(HttpExchange exchange) throws IOException {
+            this.exchange = exchange;
         }
 
         @Override
         public InputStream stream() {
-            return inputStream;
+            return exchange.getRequestBody();
         }
 
         @Override
         public String method() {
-            return null;
+            return this.exchange.getRequestMethod();
         }
 
         @Override
         public String url() {
-            return null;
+            return this.exchange.getRequestURI().toString();
         }
     }
 
     private static class MiniatureResponse implements Response {
 
-        private OutputStream outputStream;
+        private HttpExchange exchange;
 
-        private MiniatureResponse(Socket socket) throws IOException {
-            this.outputStream = socket.getOutputStream();
+        private int statusCode;
+
+        private long contentLength;
+
+        private MiniatureResponse(HttpExchange exchange) throws IOException {
+            this.exchange = exchange;
         }
 
         @Override
         public Response status(int statusCode) {
-            return null;
+            this.statusCode = statusCode;
+            return this;
+        }
+
+        @Override
+        public Response length(long length) {
+            this.contentLength = length;
+            return this;
+        }
+
+        @Override
+        public Response headers(Map<? extends String, ? extends List<String>> headers) {
+            this.exchange.getResponseHeaders().putAll(headers);
+            return this;
+        }
+
+        @Override
+        public Response header(String header, String value) {
+            this.exchange.getResponseHeaders().add(header, value);
+            return this;
+        }
+
+        @Override
+        public Response header(String header, int value) {
+            this.exchange.getResponseHeaders().add(header, Integer.toString(value));
+            return this;
         }
 
         @Override
         public Response send(CharSequence body) {
             try {
-                outputStream.write(body.toString().getBytes());
+                this.exchange.sendResponseHeaders(statusCode, contentLength);
+                this.exchange.getResponseBody().write(body.toString().getBytes());
+
+                this.exchange.getResponseBody().close();
+
             } catch (IOException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
             return this;
         }
-
-        @Override
-        public OutputStream stream() {
-            return outputStream;
-        }
     }
 
-    public static interface Response {
-        Response status(int statusCode);
-        Response send(CharSequence body);
-
-        OutputStream stream();
-    }
 
     public static Middleware logger() {
         return new Middleware() {
 
             @Override
             public Middleware handle(Request request, Response response) {
-                System.out.printf("%s %s", request.method(), request.url());
+                System.out.printf("%s %s\n", request.method(), request.url());
                 return this.next();
             }
         };
     }
 
-    // TODO (oleksiy on 02.09.13): implement http engine
     public Miniature listen(int port) {
 
-        // TODO (oleksiy on 02.09.13): wire up all components
+        HttpServer httpServer = new HttpServer();
 
+        httpServer.setPort(port);
+
+        LinkedList<Filter> filters = new LinkedList<Filter>();
+
+        for (final Middleware middleware: middlewares) {
+            filters.add(new Filter() {
+                @Override
+                public void doFilter(HttpExchange httpExchange, Chain chain) throws IOException {
+                    MiniatureRequest request = new MiniatureRequest(httpExchange);
+                    MiniatureResponse response = new MiniatureResponse(httpExchange);
+
+                    middleware.handle(request, response);
+
+                    chain.doFilter(httpExchange);
+                }
+
+                @Override
+                public String description() {
+                    return null;
+                }
+            });
+        }
+
+        httpServer.setFilters(filters);
+
+        httpServer.setContexts(new HashMap<String, HttpHandler>() {{
+
+            for (final Map.Entry< String, Handler> requestMapping:  handlers.entrySet()) {
+                put(requestMapping.getKey(), new HttpHandler() {
+                    @Override
+                    public void handle(HttpExchange exchange) throws IOException {
+                        System.out.println("executing");
+                        MiniatureRequest request = new MiniatureRequest(exchange);
+                        MiniatureResponse response = new MiniatureResponse(exchange);
+                        try {
+                            requestMapping.getValue().handle(request, response);
+                        } catch (Throwable throwable) {
+                            throwable.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                        }
+                    }
+                });
+            }
+        }});
 
         try {
-            serverSocket = new ServerSocket(port);
+            httpServer.afterPropertiesSet();
         }
         catch (IOException e) {
             System.out.println("Could not listen on port: " + port);
             System.exit(-1);
         }
 
-
-        // TODO (oleksiy on 02.09.13): start listener
-        while (true) {
-            try {
-                Socket clientSocket = serverSocket.accept();
-
-                MiniatureRequest request = new MiniatureRequest(clientSocket);
-                MiniatureResponse response = new MiniatureResponse(clientSocket);
-
-                for (Middleware middleware: middlewares) {
-                    middleware.handle(request, response);
-                }
-
-                handler.handle(request, response);
-            } catch (IOException e1) {
-                System.out.println("Accept failed: " + port);
-                System.exit(-1);
-            } catch (Throwable throwable) {
-                throwable.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
-        }
+        return this;
     }
 
     public Miniature use(Middleware... ms) {
@@ -172,9 +211,8 @@ public class Miniature {
         return this;
     }
 
-    // TODO (oleksiy on 02.09.13): implement url patterns
-    public Miniature get(CharSequence pattern, Handler handler) {
-        this.handler = handler;
+    public Miniature get(String pattern, Handler handler) {
+        this.handlers.put(pattern, handler);
         return this;
     }
 

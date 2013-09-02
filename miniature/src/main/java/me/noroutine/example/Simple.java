@@ -21,24 +21,46 @@ public class Simple {
         mini.use(new Middleware() {
             @Override
             public Middleware handle(Request request, Response response) {
-                System.out.println("Example middleware ");
+                System.out.println("Example middleware 1");
                 return null;
             }
         });
+
+        mini.use(new Middleware() {
+            @Override
+            public Middleware handle(Request request, Response response) {
+                System.out.println("Example middleware 2");
+                return null;
+            }
+        });
+
+        mini.use(Miniature.logger());
 
         mini.get("/", new Handler() {
             @Override
             public void handle(Request request, Response response) throws Throwable {
                 String body = "Hello, World\n";
 
-                request.header("Content-Type", "text/plain");
-                request.header("Content-Length", body.length());
+                response.header("Content-Type", "text/plain");
 
+                response.length(body.length());
                 response.status(200);
-                response.send(body);
 
-                response.stream().write(body.getBytes());
-                response.stream().close();
+                response.send(body);
+            }
+        });
+
+        mini.get("/test", new Handler() {
+            @Override
+            public void handle(Request request, Response response) throws Throwable {
+                String body = "Hello, Test\n";
+
+                response.header("Content-Type", "text/plain");
+
+                response.length(body.length());
+                response.status(200);
+
+                response.send(body);
             }
         });
 
