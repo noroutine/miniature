@@ -1,8 +1,9 @@
 package me.noroutine.example;
 
 import me.noroutine.Miniature;
-
-import static me.noroutine.Miniature.*;
+import me.noroutine.miniature.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Oleksii Khilkevych
@@ -14,14 +15,17 @@ public class Simple {
         static int PORT = 3000;
     }
 
+    private static final Logger log = LoggerFactory.getLogger(Simple.class);
+
     public static void main(String[] args) {
+
 
         Miniature mini = new Miniature();
 
         mini.use(new Middleware() {
             @Override
             public Middleware handle(Request request, Response response) {
-                System.out.println("Example middleware 1");
+                log.info("Example middleware 1");
                 return null;
             }
         });
@@ -29,7 +33,7 @@ public class Simple {
         mini.use(new Middleware() {
             @Override
             public Middleware handle(Request request, Response response) {
-                System.out.println("Example middleware 2");
+                log.info("Example middleware 2");
                 return null;
             }
         });
@@ -64,7 +68,7 @@ public class Simple {
             }
         });
 
-        System.out.println("Listening on port " + Config.PORT);
+        log.info("Listening on port " + Config.PORT);
 
         mini.listen(Config.PORT);
     }

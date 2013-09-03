@@ -1,9 +1,11 @@
 package me.noroutine;
 
 import com.sun.net.httpserver.*;
+import me.noroutine.miniature.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -12,136 +14,18 @@ import java.util.*;
  */
 public class Miniature {
 
+    private static final Logger log = LoggerFactory.getLogger(Miniature.class);
+
     private List<Middleware> middlewares = new LinkedList<Middleware>();
 
     private Map<String, Handler> handlers = new HashMap<String, Handler>();
-
-    public static interface Handler {
-        void handle(Request request, Response response);
-    }
-
-    public static abstract class Middleware implements Iterator<Middleware> {
-        public abstract Middleware handle(Request request, Response response);
-
-        @Override
-        public boolean hasNext() {
-            return false;
-        }
-
-        @Override
-        public Middleware next() {
-            return null;
-        }
-
-        @Override
-        public void remove() {
-        }
-    }
-
-    public static interface Request {
-        InputStream stream();
-
-        String method();
-        String url();
-    }
-
-    public static interface Response {
-        Response status(int statusCode);
-        Response length(long length);
-        Response headers(Map<? extends String, ? extends List<String>> headers);
-        Response header(String header, String value);
-        Response header(String header, int value);
-        Response send(CharSequence body);
-    }
-
-
-    private static class MiniatureRequest implements Request {
-        private HttpExchange exchange;
-
-        private MiniatureRequest(HttpExchange exchange) throws IOException {
-            this.exchange = exchange;
-        }
-
-        @Override
-        public InputStream stream() {
-            return exchange.getRequestBody();
-        }
-
-        @Override
-        public String method() {
-            return this.exchange.getRequestMethod();
-        }
-
-        @Override
-        public String url() {
-            return this.exchange.getRequestURI().toString();
-        }
-    }
-
-    private static class MiniatureResponse implements Response {
-
-        private HttpExchange exchange;
-
-        private int statusCode;
-
-        private long contentLength;
-
-        private MiniatureResponse(HttpExchange exchange) throws IOException {
-            this.exchange = exchange;
-        }
-
-        @Override
-        public Response status(int statusCode) {
-            this.statusCode = statusCode;
-            return this;
-        }
-
-        @Override
-        public Response length(long length) {
-            this.contentLength = length;
-            return this;
-        }
-
-        @Override
-        public Response headers(Map<? extends String, ? extends List<String>> headers) {
-            this.exchange.getResponseHeaders().putAll(headers);
-            return this;
-        }
-
-        @Override
-        public Response header(String header, String value) {
-            this.exchange.getResponseHeaders().add(header, value);
-            return this;
-        }
-
-        @Override
-        public Response header(String header, int value) {
-            this.exchange.getResponseHeaders().add(header, Integer.toString(value));
-            return this;
-        }
-
-        @Override
-        public Response send(CharSequence body) {
-            try {
-                this.exchange.sendResponseHeaders(statusCode, contentLength);
-                this.exchange.getResponseBody().write(body.toString().getBytes());
-
-                this.exchange.getResponseBody().close();
-
-            } catch (IOException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
-            return this;
-        }
-    }
-
 
     public static Middleware logger() {
         return new Middleware() {
 
             @Override
             public Middleware handle(Request request, Response response) {
-                System.out.printf("%s %s\n", request.method(), request.url());
+                log.info("{} {}", request.method(), request.url());
                 return this.next();
             }
         };
@@ -182,7 +66,7 @@ public class Miniature {
                 put(requestMapping.getKey(), new HttpHandler() {
                     @Override
                     public void handle(HttpExchange exchange) throws IOException {
-                        System.out.println("executing");
+                        log.info("executing handler for {}", requestMapping.getKey());
                         MiniatureRequest request = new MiniatureRequest(exchange);
                         MiniatureResponse response = new MiniatureResponse(exchange);
                         requestMapping.getValue().handle(request, response);
