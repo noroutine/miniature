@@ -1,48 +1,92 @@
 package me.noroutine.miniature.http;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpPrincipal;
+import org.apache.commons.io.IOUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.URI;
 
 /**
 * @author Oleksii Khilkevych
 * @since 03.09.13
 */
 public class MiniatureRequest implements Request {
-    private HttpExchange exchange;
 
-    public MiniatureRequest(HttpExchange exchange) throws IOException {
-        this.exchange = exchange;
+    private InputStream inputStream;
+
+    private String method;
+
+    private URI uri;
+
+    public MiniatureRequest()  {
     }
 
     @Override
-    public InputStream body() {
-        return null;
+    public String body() {
+        StringWriter body = new StringWriter();
+        try {
+            IOUtils.copy(inputStream, body);
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        return body.toString();
     }
 
     @Override
     public String method() {
-        return this.exchange.getRequestMethod();
+        return method;
     }
 
     @Override
     public String url() {
-        return this.exchange.getRequestURI().toString();
+        return uri.toString();
     }
 
     @Override
-    public HttpPrincipal principal() {
+    public Request.State state() {
+        return take(Request.State.class);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T take(Class<T> more) {
+        if (more == Request.State.class) {
+            return (T) new State();
+        }
+
         return null;
     }
 
-    @Override
-    public Object attribute(String s) {
-        return null;
-    }
+    private class State implements Request.State {
+        private MiniatureRequest parent = MiniatureRequest.this;
 
-    @Override
-    public void attribute(String s, Object o) {
+        @Override
+        public InputStream getInputStream() {
+            return parent.inputStream;
+        }
+
+        @Override
+        public void setInputStream(InputStream inputStream) {
+            parent.inputStream = inputStream;
+        }
+
+        @Override
+        public String getMethod() {
+            return parent.method;
+        }
+
+        @Override
+        public void setMethod(String method) {
+            parent.method = method;
+        }
+
+        @Override
+        public URI getUri() {
+            return parent.uri;
+        }
+
+        @Override
+        public void setUri(URI uri) {
+            parent.uri = uri;
+        }
     }
 }

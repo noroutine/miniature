@@ -1,8 +1,8 @@
 package me.noroutine;
 
-import com.sun.net.httpserver.*;
-import me.noroutine.miniature.*;
+import me.noroutine.miniature.Middleware;
 import me.noroutine.miniature.http.*;
+import me.noroutine.miniature.http.spi.provider.SunHttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,47 +34,34 @@ public class Miniature {
 
     public Miniature listen(int port) {
 
-        HttpServer httpServer = new HttpServer();
+        SunHttpServer httpServer = new SunHttpServer();
 
         httpServer.setPort(port);
 
-        LinkedList<Filter> filters = new LinkedList<Filter>();
+//        LinkedList<Filter> filters = new LinkedList<Filter>();
+//
+//        for (final Middleware middleware: middlewares) {
+//            filters.add(new Filter() {
+//                @Override
+//                public void doFilter(HttpExchange httpExchange, Chain chain) throws IOException {
+//                    MiniatureRequest request = new MiniatureRequest(httpExchange);
+//                    MiniatureResponse response = new MiniatureResponse(httpExchange);
+//
+//                    middleware.handle(request, response);
+//
+//                    chain.doFilter(httpExchange);
+//                }
+//
+//                @Override
+//                public String description() {
+//                    return null;
+//                }
+//            });
+//        }
+//
+//        httpServer.setFilters(filters);
 
-        for (final Middleware middleware: middlewares) {
-            filters.add(new Filter() {
-                @Override
-                public void doFilter(HttpExchange httpExchange, Chain chain) throws IOException {
-                    MiniatureRequest request = new MiniatureRequest(httpExchange);
-                    MiniatureResponse response = new MiniatureResponse(httpExchange);
-
-                    middleware.handle(request, response);
-
-                    chain.doFilter(httpExchange);
-                }
-
-                @Override
-                public String description() {
-                    return null;
-                }
-            });
-        }
-
-        httpServer.setFilters(filters);
-
-        httpServer.setContexts(new HashMap<String, HttpHandler>() {{
-
-            for (final Map.Entry< String, Handler> requestMapping:  handlers.entrySet()) {
-                put(requestMapping.getKey(), new HttpHandler() {
-                    @Override
-                    public void handle(HttpExchange exchange) throws IOException {
-                        log.info("executing handler for {}", requestMapping.getKey());
-                        MiniatureRequest request = new MiniatureRequest(exchange);
-                        MiniatureResponse response = new MiniatureResponse(exchange);
-                        requestMapping.getValue().handle(request, response);
-                    }
-                });
-            }
-        }});
+        httpServer.setHandlers(handlers);
 
         try {
             httpServer.afterPropertiesSet();

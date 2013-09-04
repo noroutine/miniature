@@ -1,5 +1,7 @@
 package me.noroutine.miniature.http;
 
+import me.noroutine.miniature.http.spi.Exchange;
+
 import java.io.InputStream;
 
 /**
@@ -8,32 +10,49 @@ import java.io.InputStream;
  */
 public interface Response {
 
+    // Fluent mutators
+    Response status(int statusCode);
+
+    Response header(String header, Object value);
+
+    Response length(long length);
+
+    Response body(String body);
+
+    void send();
+
+    State state();
+
     /**
      * Returns a friendly class, with more methods
+     *
      * @param more
      * @param <T>
      * @return
      */
     <T> T take(Class<T> more);
 
-    interface Status {
-        // Fluent mutators
-        Status status(int statusCode);
+    static interface State {
+        public int getStatusCode();
+
+        public void setStatusCode(int statusCode);
+
+        public long getContentLength();
+
+        public void setContentLength(long contentLength);
+
+        public Headers getHeaders();
+
+        public void setHeaders(Headers headers);
+
+        public InputStream getBody();
+
+        public void setBody(InputStream body);
     }
 
-    interface Headers {
-        Headers header(String header, Object value);
-        Headers header(String header, Iterable<Object> values);
-        Headers length(long length);
-    }
+    static interface SenderAccess {
+        public Exchange.ResponseSender getResponseSender();
 
-    interface Body {
-        Body body(String body);
-        Body body(InputStream body);
-    }
-
-    interface Sender {
-        // send
-        void send();
+        public void setResponseSender(Exchange.ResponseSender responseSender);
     }
 }

@@ -1,7 +1,4 @@
-package me.noroutine.miniature;
-
-import me.noroutine.miniature.http.Request;
-import me.noroutine.miniature.http.Response;
+package me.noroutine.miniature.http;
 
 /**
 * @author Oleksii Khilkevych

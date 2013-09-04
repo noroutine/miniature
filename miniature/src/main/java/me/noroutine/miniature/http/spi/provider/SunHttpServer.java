@@ -1,6 +1,9 @@
-package me.noroutine;
+package me.noroutine.miniature.http.spi.provider;
 
 import com.sun.net.httpserver.*;
+import me.noroutine.miniature.http.*;
+import me.noroutine.miniature.http.spi.Exchange;
+import me.noroutine.miniature.http.spi.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -26,7 +29,7 @@ import java.util.concurrent.Executor;
  * @author Arjen Poutsma
  * @since 02.09.13
  */
-public class HttpServer {
+public class SunHttpServer implements HttpServer {
 
     private int port = 8080;
 
@@ -38,7 +41,7 @@ public class HttpServer {
 
     private Executor executor;
 
-    private Map<String, HttpHandler> contexts;
+    private Map<String, Handler> handlers;
 
     private List<Filter> filters;
 
@@ -97,8 +100,8 @@ public class HttpServer {
      * @see org.springframework.remoting.caucho.SimpleHessianServiceExporter
      * @see org.springframework.remoting.caucho.SimpleBurlapServiceExporter
      */
-    public void setContexts(Map<String, HttpHandler> contexts) {
-        this.contexts = contexts;
+    public void setHandlers(Map<String, Handler> handlers) {
+        this.handlers = handlers;
     }
 
     /**
@@ -125,9 +128,9 @@ public class HttpServer {
         if (this.executor != null) {
             this.server.setExecutor(this.executor);
         }
-        if (this.contexts != null) {
-            for (String key : this.contexts.keySet()) {
-                HttpContext httpContext = this.server.createContext(key, this.contexts.get(key));
+        if (this.handlers != null) {
+            for (String key : this.handlers.keySet()) {
+                HttpContext httpContext = this.server.createContext(key, httpHandlerFromHandler(this.handlers.get(key)));
                 if (this.filters != null) {
                     httpContext.getFilters().addAll(this.filters);
                 }
@@ -157,4 +160,16 @@ public class HttpServer {
         this.server.stop(this.shutdownDelay);
     }
 
+    private HttpHandler httpHandlerFromHandler(final Handler handler) {
+        return new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+
+                Exchange x = new SunHttpServerExchange(exchange);
+                Request request = x.request();
+                Response response = x.response();
+                handler.handle(request, response);
+            }
+        };
+    }
 }

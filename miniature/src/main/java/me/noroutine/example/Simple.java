@@ -1,7 +1,7 @@
 package me.noroutine.example;
 
 import me.noroutine.Miniature;
-import me.noroutine.miniature.Handler;
+import me.noroutine.miniature.http.Handler;
 import me.noroutine.miniature.Middleware;
 import me.noroutine.miniature.http.Request;
 import me.noroutine.miniature.http.Response;
@@ -21,7 +21,6 @@ public class Simple {
     private static final Logger log = LoggerFactory.getLogger(Simple.class);
 
     public static void main(String[] args) {
-
 
         Miniature mini = new Miniature();
 
@@ -43,42 +42,49 @@ public class Simple {
 
         mini.use(Miniature.logger());
 
-//        mini.get("/", new Handler() {
-//            @Override
-//            public void handle(Request request, Response response) {
-//                String body = "Hello, World\n";
-//
-//                H
-//                response.header("Content-Type", "text/plain");
+        mini.get("/", new Handler() {
+            @Override
+            public void handle(Request request, Response response) {
+
+                String body = "Hello, World\n";
+
+                response.header("Content-Type", "text/plain");
 //                response.header("Content-Length", body.length());
-//                response.status(200);
-//
-//                response.body(body);
-//
-//                response.send();
-//            }
-//        });
-//
+
+                response.length(body.length());
+
+                response.status(200);
+
+
+                response.body(body);
+
+                response.send();
+            }
+        });
+
         mini.get("/test", new Handler() {
             @Override
             public void handle(Request request, Response response) {
                 String hello = "Hello, Test\n";
+                log.info("blah");
+                response.header("Content-Type", "text/plain");
+//                response.header("Content-Length", hello.length());
 
-                Response.Headers headers = response.take(Response.Headers.class);
+                response.length(hello.length());
 
-                Response.Body body = response.take(Response.Body.class);
-                Response.Status status = response.take(Response.Status.class);
+                response.status(200);
 
-                Response.Sender sender = response.take(Response.Sender.class);
+                response.body(hello);
 
-                headers.header("Content-Type", "text/plain");
-                headers.header("Content-Length", hello.length());
+                response.send();
+            }
+        });
 
-                status.status(200);
-
-                body.body(hello);
-
-                sender.send();
+        mini.get("/123", new Handler() {
+            @Override
+            public void handle(Request request, Response response) {
+                response.header("Blah", "123")
+                        .send();
             }
         });
 
