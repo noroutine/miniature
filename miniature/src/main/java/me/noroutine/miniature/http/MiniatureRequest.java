@@ -1,6 +1,7 @@
-package me.noroutine.miniature;
+package me.noroutine.miniature.http;
 
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpPrincipal;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,8 +18,8 @@ public class MiniatureRequest implements Request {
     }
 
     @Override
-    public InputStream stream() {
-        return exchange.getRequestBody();
+    public InputStream body() {
+        return null;
     }
 
     @Override
@@ -29,5 +30,19 @@ public class MiniatureRequest implements Request {
     @Override
     public String url() {
         return this.exchange.getRequestURI().toString();
+    }
+
+    @Override
+    public HttpPrincipal principal() {
+        return null;
+    }
+
+    @Override
+    public Object attribute(String s) {
+        return null;
+    }
+
+    @Override
+    public void attribute(String s, Object o) {
     }
 }

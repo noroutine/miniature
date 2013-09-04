@@ -1,5 +1,8 @@
 package me.noroutine.miniature;
 
+import me.noroutine.miniature.http.Request;
+import me.noroutine.miniature.http.Response;
+
 import java.util.Iterator;
 
 /**

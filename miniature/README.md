@@ -8,3 +8,7 @@
 * should rely on code-complete
 * should not magnify constants, for example if status can be set as 200, it's clear what it is
 * should be able to create http endpoints and do it fast and well, any other functionality is of lower importance
+* reuse JDK classes as much as possible
+* fluent interfaces everywhere
+
+* where it is not possible to fir interface into 10-12 methods, all frequent methods extended method version should be provided

@@ -1,7 +1,10 @@
 package me.noroutine.example;
 
 import me.noroutine.Miniature;
-import me.noroutine.miniature.*;
+import me.noroutine.miniature.Handler;
+import me.noroutine.miniature.Middleware;
+import me.noroutine.miniature.http.Request;
+import me.noroutine.miniature.http.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,31 +43,42 @@ public class Simple {
 
         mini.use(Miniature.logger());
 
-        mini.get("/", new Handler() {
-            @Override
-            public void handle(Request request, Response response) {
-                String body = "Hello, World\n";
-
-                response.header("Content-Type", "text/plain");
-
-                response.length(body.length());
-                response.status(200);
-
-                response.send(body);
-            }
-        });
-
+//        mini.get("/", new Handler() {
+//            @Override
+//            public void handle(Request request, Response response) {
+//                String body = "Hello, World\n";
+//
+//                H
+//                response.header("Content-Type", "text/plain");
+//                response.header("Content-Length", body.length());
+//                response.status(200);
+//
+//                response.body(body);
+//
+//                response.send();
+//            }
+//        });
+//
         mini.get("/test", new Handler() {
             @Override
             public void handle(Request request, Response response) {
-                String body = "Hello, Test\n";
+                String hello = "Hello, Test\n";
 
-                response.header("Content-Type", "text/plain");
+                Response.Headers headers = response.take(Response.Headers.class);
 
-                response.length(body.length());
-                response.status(200);
+                Response.Body body = response.take(Response.Body.class);
+                Response.Status status = response.take(Response.Status.class);
 
-                response.send(body);
+                Response.Sender sender = response.take(Response.Sender.class);
+
+                headers.header("Content-Type", "text/plain");
+                headers.header("Content-Length", hello.length());
+
+                status.status(200);
+
+                body.body(hello);
+
+                sender.send();
             }
         });
 

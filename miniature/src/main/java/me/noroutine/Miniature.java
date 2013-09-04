@@ -2,6 +2,7 @@ package me.noroutine;
 
 import com.sun.net.httpserver.*;
 import me.noroutine.miniature.*;
+import me.noroutine.miniature.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
