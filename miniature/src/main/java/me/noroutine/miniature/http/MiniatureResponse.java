@@ -1,7 +1,5 @@
 package me.noroutine.miniature.http;
 
-import me.noroutine.miniature.http.spi.Exchange;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
@@ -19,7 +17,7 @@ public class MiniatureResponse implements Response {
 
     private InputStream body;
 
-    private Exchange.ResponseSender responseSender;
+    private Exchange exchange;
 
     public MiniatureResponse() {
     }
@@ -50,7 +48,7 @@ public class MiniatureResponse implements Response {
 
     @Override
     public void send() {
-        take(Response.SenderAccess.class).getResponseSender().send(this);
+        state().getExchange().send(this);
     }
 
     @Override
@@ -93,18 +91,16 @@ public class MiniatureResponse implements Response {
             parent.body = body;
         }
 
-    }
-
-    private class SenderAccess implements Response.SenderAccess {
-        private MiniatureResponse parent = MiniatureResponse.this;
-
-        public Exchange.ResponseSender getResponseSender() {
-            return parent.responseSender;
+        @Override
+        public Exchange getExchange() {
+            return parent.exchange;
         }
 
-        public void setResponseSender(Exchange.ResponseSender responseSender) {
-            parent.responseSender = responseSender;
+        @Override
+        public void setExchange(Exchange exchange) {
+            parent.exchange = exchange;
         }
+
     }
 
     @Override
@@ -113,10 +109,6 @@ public class MiniatureResponse implements Response {
 
         if (more == Response.State.class) {
             return (T) new State();
-        }
-
-        if (more == Response.SenderAccess.class) {
-            return (T) new SenderAccess();
         }
 
         return null;

@@ -2,7 +2,7 @@ package me.noroutine.example;
 
 import me.noroutine.Miniature;
 import me.noroutine.miniature.http.Handler;
-import me.noroutine.miniature.Middleware;
+import me.noroutine.miniature.http.Middleware;
 import me.noroutine.miniature.http.Request;
 import me.noroutine.miniature.http.Response;
 import org.slf4j.Logger;
@@ -24,23 +24,21 @@ public class Simple {
 
         Miniature mini = new Miniature();
 
-        mini.use(new Middleware() {
-            @Override
-            public Middleware handle(Request request, Response response) {
-                log.info("Example middleware 1");
-                return null;
-            }
-        });
-
-        mini.use(new Middleware() {
-            @Override
-            public Middleware handle(Request request, Response response) {
-                log.info("Example middleware 2");
-                return null;
-            }
-        });
-
         mini.use(Miniature.logger());
+
+        mini.use(new Middleware() {
+            @Override
+            public void handle(Request request, Response response) {
+                log.info("Example middleware 1");
+            }
+        });
+
+        mini.use(new Middleware() {
+            @Override
+            public void handle(Request request, Response response) {
+                log.info("Example middleware 2");
+            }
+        });
 
         mini.get("/", new Handler() {
             @Override

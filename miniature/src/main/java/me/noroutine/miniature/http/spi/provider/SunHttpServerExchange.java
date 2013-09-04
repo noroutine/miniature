@@ -2,7 +2,7 @@ package me.noroutine.miniature.http.spi.provider;
 
 import com.sun.net.httpserver.HttpExchange;
 import me.noroutine.miniature.http.*;
-import me.noroutine.miniature.http.spi.Exchange;
+import me.noroutine.miniature.http.Exchange;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -29,25 +29,21 @@ public class SunHttpServerExchange implements Exchange {
         return responseFromProviderHttpExchange(httpExchange);
     }
 
-    private ResponseSender responseSender() {
-        return new ResponseSender() {
-            @Override
-            public void send(Response response) {
-                Response.State state = response.take(Response.State.class);
+    @Override
+    public void send(Response response) {
+        Response.State state = response.take(Response.State.class);
 
-                for (Map.Entry<String, String> entry: state.getHeaders().getHeaders().entrySet()) {
-                    httpExchange.getResponseHeaders().set(entry.getKey(), entry.getValue());
-                }
+        for (Map.Entry<String, String> entry: state.getHeaders().getHeaders().entrySet()) {
+            httpExchange.getResponseHeaders().set(entry.getKey(), entry.getValue());
+        }
 
-                try {
-                    httpExchange.sendResponseHeaders(state.getStatusCode(), state.getContentLength());
-                    IOUtils.copy(state.getBody(), httpExchange.getResponseBody());
-                    httpExchange.getResponseBody().close();
-                } catch (IOException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                }
-            }
-        };
+        try {
+            httpExchange.sendResponseHeaders(state.getStatusCode(), state.getContentLength());
+            IOUtils.copy(state.getBody(), httpExchange.getResponseBody());
+            httpExchange.getResponseBody().close();
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
     }
 
     private Request requestFromProviderHttpExchange(HttpExchange exchange) {
@@ -56,14 +52,13 @@ public class SunHttpServerExchange implements Exchange {
         state.setInputStream(exchange.getRequestBody());
         state.setMethod(exchange.getRequestMethod());
         state.setUri(exchange.getRequestURI());
+        state.setExchange(this);
         return request;
     }
 
     private Response responseFromProviderHttpExchange(HttpExchange exchange) {
         MiniatureResponse response = new MiniatureResponse();
-        response
-                .take(Response.SenderAccess.class)
-                .setResponseSender(responseSender());
+        response.state().setExchange(this);
         return response;
     }
 }

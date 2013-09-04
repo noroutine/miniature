@@ -2,13 +2,11 @@ package me.noroutine.miniature.http.spi.provider;
 
 import com.sun.net.httpserver.*;
 import me.noroutine.miniature.http.*;
-import me.noroutine.miniature.http.spi.Exchange;
 import me.noroutine.miniature.http.spi.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executor;
 
 /**
@@ -120,28 +118,34 @@ public class SunHttpServer implements HttpServer {
         this.authenticator = authenticator;
     }
 
+    @Override
+    public void start() {
+        try {
+            InetSocketAddress address = (this.hostname != null ?
+                    new InetSocketAddress(this.hostname, this.port) : new InetSocketAddress(this.port));
+            this.server = com.sun.net.httpserver.HttpServer.create(address, this.backlog);
+            if (this.executor != null) {
+                this.server.setExecutor(this.executor);
+            }
+            if (this.handlers != null) {
+                for (String key : this.handlers.keySet()) {
+                    HttpContext httpContext = this.server.createContext(key, httpHandlerFromHandler(this.handlers.get(key)));
+                    if (this.filters != null) {
+                        httpContext.getFilters().addAll(this.filters);
+                    }
 
-    public void afterPropertiesSet() throws IOException {
-        InetSocketAddress address = (this.hostname != null ?
-                new InetSocketAddress(this.hostname, this.port) : new InetSocketAddress(this.port));
-        this.server = com.sun.net.httpserver.HttpServer.create(address, this.backlog);
-        if (this.executor != null) {
-            this.server.setExecutor(this.executor);
-        }
-        if (this.handlers != null) {
-            for (String key : this.handlers.keySet()) {
-                HttpContext httpContext = this.server.createContext(key, httpHandlerFromHandler(this.handlers.get(key)));
-                if (this.filters != null) {
-                    httpContext.getFilters().addAll(this.filters);
-                }
-
-                if (this.authenticator != null) {
-                    httpContext.setAuthenticator(this.authenticator);
+                    if (this.authenticator != null) {
+                        httpContext.setAuthenticator(this.authenticator);
+                    }
                 }
             }
+
+            this.server.start();
+        } catch (IOException e) {
+            System.out.println("Could not listen on port: " + port);
+            System.exit(-1);
         }
 
-        this.server.start();
     }
 
     public com.sun.net.httpserver.HttpServer getObject() {
@@ -158,6 +162,33 @@ public class SunHttpServer implements HttpServer {
 
     public void destroy() {
         this.server.stop(this.shutdownDelay);
+    }
+
+    @Override
+    public void setMiddlewares(List<Middleware> middlewares) {
+        LinkedList<Filter> filters = new LinkedList<Filter>();
+
+        for (final Middleware middleware: middlewares) {
+            filters.add(new Filter() {
+                @Override
+                public void doFilter(HttpExchange httpExchange, Chain chain) throws IOException {
+                    Exchange x = new SunHttpServerExchange(httpExchange);
+                    Request request = x.request();
+                    Response response = x.response();
+
+                    middleware.handle(request, response);
+
+                    chain.doFilter(httpExchange);
+                }
+
+                @Override
+                public String description() {
+                    return null;
+                }
+            });
+        }
+
+        this.filters = filters;
     }
 
     private HttpHandler httpHandlerFromHandler(final Handler handler) {

@@ -1,7 +1,5 @@
 package me.noroutine.miniature.http;
 
-import me.noroutine.miniature.http.spi.Exchange;
-
 import java.io.InputStream;
 
 /**
@@ -34,25 +32,19 @@ public interface Response {
 
     static interface State {
         public int getStatusCode();
-
         public void setStatusCode(int statusCode);
 
         public long getContentLength();
-
         public void setContentLength(long contentLength);
 
         public Headers getHeaders();
-
         public void setHeaders(Headers headers);
 
         public InputStream getBody();
-
         public void setBody(InputStream body);
-    }
 
-    static interface SenderAccess {
-        public Exchange.ResponseSender getResponseSender();
+        Exchange getExchange();
+        void setExchange(Exchange exchange);
 
-        public void setResponseSender(Exchange.ResponseSender responseSender);
     }
 }

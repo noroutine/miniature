@@ -25,9 +25,14 @@ public interface Request {
     static interface State {
         InputStream getInputStream();
         void setInputStream(InputStream inputStream);
+
         String getMethod();
         void setMethod(String method);
+
         URI getUri();
         void setUri(URI uri);
+
+        Exchange getExchange();
+        void setExchange(Exchange exchange);
     }
 }

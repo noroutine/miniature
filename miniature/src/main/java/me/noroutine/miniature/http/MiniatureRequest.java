@@ -17,6 +17,8 @@ public class MiniatureRequest implements Request {
 
     private URI uri;
 
+    private Exchange exchange;
+
     public MiniatureRequest()  {
     }
 
@@ -87,6 +89,16 @@ public class MiniatureRequest implements Request {
         @Override
         public void setUri(URI uri) {
             parent.uri = uri;
+        }
+
+        @Override
+        public Exchange getExchange() {
+            return parent.exchange;
+        }
+
+        @Override
+        public void setExchange(Exchange exchange) {
+            parent.exchange = exchange;
         }
     }
 }
