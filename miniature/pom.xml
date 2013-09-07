@@ -32,7 +32,7 @@
                     <executable>scl</executable>
                     <workingDirectory>src/main/java</workingDirectory>
                     <arguments>
-                        <argument>-v</argument>
+                        <!--<argument>-v</argument>-->
                         <argument>-cp</argument>
                         <classpath />
                         <argument>-d</argument>

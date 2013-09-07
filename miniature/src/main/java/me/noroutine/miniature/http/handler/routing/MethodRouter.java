@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class MethodRouter implements Handler {
 
-    private Map<String, Handler> methodHandlers = new HashMap<>();
+    private Map<String, Handler> methodHandlers = new HashMap<String, Handler>();
 
     public MethodRouter(Map<String, Handler> methodHandlers) {
         this.methodHandlers = methodHandlers;

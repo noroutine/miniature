@@ -3,6 +3,8 @@ package me.noroutine.miniature.http.spi.provider;
 import com.sun.net.httpserver.HttpExchange;
 import me.noroutine.miniature.http.*;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -12,6 +14,8 @@ import java.util.*;
  * @since 04.09.13
  */
 public class SunHttpServerExchange implements Exchange {
+
+    private static final Logger log = LoggerFactory.getLogger(SunHttpServerExchange.class);
 
     private HttpExchange httpExchange;
 
@@ -53,7 +57,9 @@ public class SunHttpServerExchange implements Exchange {
             }
             httpExchange.getResponseBody().close();
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            if (! e.getMessage().equals("Broken pipe")) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
         }
     }
 

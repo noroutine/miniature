@@ -104,6 +104,9 @@ public class Simple {
         return new HandlerChain(new LinkedList<Handler>() {{
             add(new ExceptionCatcher(
                     new UrlPatternRouter(new HashMap<String, Handler>() {{
+
+                        put(".*", new StaticFileHandler("/Users/oleksii/dev/miniature/miniature/src/main/resources/META-INF/webapp"));
+
                         put("/test.*", new Handler() {
                             @Override
                             public void handle(Exchange exchange) {
