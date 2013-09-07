@@ -43,6 +43,9 @@ public interface Response {
         public InputStream getBody();
         public void setBody(InputStream body);
 
+        public boolean isSent();
+        public void setSent(boolean sent);
+
         Exchange getExchange();
         void setExchange(Exchange exchange);
 

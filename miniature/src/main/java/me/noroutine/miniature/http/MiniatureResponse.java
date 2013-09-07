@@ -19,6 +19,8 @@ public class MiniatureResponse implements Response {
 
     private Exchange exchange;
 
+    private boolean sent = false;
+
     public MiniatureResponse() {
     }
 
@@ -48,6 +50,10 @@ public class MiniatureResponse implements Response {
 
     @Override
     public void send() {
+        if (sent) {
+            throw new IllegalStateException("Response was already sent to client");
+        }
+        sent = true;
         state().getExchange().send(this);
     }
 
@@ -101,6 +107,14 @@ public class MiniatureResponse implements Response {
             parent.exchange = exchange;
         }
 
+        @Override
+        public boolean isSent() {
+            return parent.sent;
+        }
+
+        public void setSent(boolean sent) {
+            parent.sent = sent;
+        }
     }
 
     @Override

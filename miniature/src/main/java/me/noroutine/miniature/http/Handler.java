@@ -5,5 +5,5 @@ package me.noroutine.miniature.http;
 * @since 03.09.13
 */
 public interface Handler {
-    void handle(Request request, Response response);
+    void handle(Exchange exchange);
 }
