@@ -17,7 +17,12 @@ public class StaticFileHandler implements Handler {
         put("js", "application/javascript");
         put("json", "application/javascript");
         put("html", "text/html");
-
+        put("jpg", "image/jpeg");
+        put("png", "image/png");
+        put("eot", "application/vnd.ms-fontobject");
+        put("woff", "application/font-woff");
+        put("ttf", "application/octet-stream");
+        put("svg", "image/svg+xml");
     }};
 
     private String folder;
