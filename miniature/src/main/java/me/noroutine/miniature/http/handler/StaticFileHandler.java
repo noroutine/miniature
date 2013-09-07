@@ -12,7 +12,6 @@ import java.util.HashMap;
 public class StaticFileHandler implements Handler {
 
     private static HashMap<String, String> TYPES = new HashMap<String, String>() {{
-
         put("css", "text/css");
         put("js", "application/javascript");
         put("json", "application/javascript");

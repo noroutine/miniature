@@ -148,6 +148,7 @@ public class Simple {
                                 response.send();
                             }
                         });
+
                         put("/exception", new Handler() {
                             @Override
                             public void handle(Exchange exchange) {
